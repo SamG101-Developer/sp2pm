@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import functools
 import json
+import socket
 from typing import Optional
 
 import psutil
@@ -107,8 +108,10 @@ class UI(QDialog):
         self._client_bind_port.setText("20000")
         self._receiver_widget = ReceiverWidget()
 
+        my_ip_label = QLabel(f"My IP Address: {socket.gethostbyname(socket.gethostname())}")
         confirm_bind_button = QPushButton("Bind", clicked=self._start_receiving)
 
+        client_bind_frame.layout().addWidget(my_ip_label)
         client_bind_frame.layout().addWidget(self._client_bind_port)
         client_bind_frame.layout().addWidget(confirm_bind_button)
 
