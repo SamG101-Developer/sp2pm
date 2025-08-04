@@ -1,11 +1,19 @@
 # SP2MP
 
-SP2MP is a Python package designed to facilitate the conversion of single-player games into multiplayer experiences. It
-provides "broadcaster" and "key-mapper" utilities.
+SP2MP is a Python package that allows simple multiplayer games usually played on one device, to be played over multiple
+devices. The "server" device will run the game, and can select clients to broadcast the game to. The clients will then
+press keys, which are sent back to the server.
 
-The broadcaster utility allows you to stream game data to multiple clients, while the key-mapper utility enables you to
-accept other clients keys and map then to teh actual player 2 key mappings. These are then saved per game.
+A simple example is the "SuperFighters" game, which allows 2 players to play on the same device (WASD and arrow keys).
+The server may use the arrow keys, while the client uses WASD. The server will then broadcast the game to the client,
+and the client will send back the key presses.
 
-A simple example is the Superfighters game. The host will attach clients, and broadcast to them in parallel. The clients
-will see the broadcast, and can send their key presses to the host. The host will then map these keys to the player 2
-keys, and the game will be played as if it was a multiplayer game.
+Currently, this has only been tested over a LAN, using internal ip addresses, like `192.168.xxx.xxx`. **DO NOT** try to
+update the socket code to use external addresses, until key black/white listing is implemented.
+
+## TODO
+
+- The key mapper functionality (allowing a client to bind their own player 1 keys to the server's player 2 keys for
+  example) is not implemented yet.
+- Blacklist certain keys that would allow the client to control the server.
+- Allow the server to whitelist keys that can be sent by the client (like restricting player 2 to player 2 keys).
