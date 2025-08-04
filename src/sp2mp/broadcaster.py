@@ -30,9 +30,9 @@ class Client:
     host: str
     port: int
     queue: Queue = field(default_factory=Queue)
-    sender_thread: Thread = field(init=False)
-    client_thread: Thread = field(init=False)
-    socket: socket = field(init=False)
+    sender_thread: Thread = field(init=False, default=None)
+    client_thread: Thread = field(init=False, default=None)
+    socket: socket = field(init=False, default=None)
 
 
 class Broadcaster:
