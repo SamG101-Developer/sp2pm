@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import functools
 import json
+import pickle
 import socket
 from typing import Optional
 
@@ -18,7 +19,7 @@ from PyQt6.QtWidgets import QApplication, QComboBox, QDialog, QGroupBox, QHBoxLa
     QTabWidget, QVBoxLayout, \
     QWidget
 
-from sp2mp.broadcaster import Broadcaster
+from sp2mp.broadcaster import Broadcaster, EventProtocol, KeyboardEvent
 from sp2mp.receiver import Receiver
 from sp2mp.screenshotter import ScreenShotter
 
@@ -150,6 +151,7 @@ class UI(QDialog):
         self._receiver = Receiver(int(self._client_bind_port.text()))
         self._receiver.data_received.connect(self._receiver_widget.show_image)
         self._receiver_widget.showMaximized()
+        self._receiver_widget._receiver = self._receiver
 
     def _fix_mapping(self, mapping: dict[int, int]) -> dict[int, int]:
         # Convert keys to integers
@@ -436,9 +438,11 @@ class KeyCaptureButton(QPushButton):
 
 class ReceiverWidget(QWidget):
     _image_display: QLabel
+    _receiver: Optional[Receiver]
 
     def __init__(self, parent: Optional[QWidget] = None, *args, **kwargs) -> None:
         super().__init__(parent, *args, **kwargs)
+        self._receiver = None
         self._setup_ui()
 
     def _setup_ui(self) -> None:
@@ -454,3 +458,20 @@ class ReceiverWidget(QWidget):
     def show_image(self, image_data: bytes) -> None:
         image = QImage.fromData(image_data)
         self._image_display.setPixmap(QPixmap.fromImage(image))
+
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        # Capture key press events and forward them to the server.
+        key = event.nativeVirtualKey()
+        mapped_event = KeyboardEvent(key_code=key, key_down=True)
+        self._receiver._send_to_socket.send(EventProtocol.KEYBOARD.value + pickle.dumps(mapped_event))
+        super().keyPressEvent(event)
+
+    def keyReleaseEvent(self, event: QKeyEvent) -> None:
+        if event.isAutoRepeat():
+            return
+
+        # Capture key release events and forward them to the server.
+        key = event.nativeVirtualKey()
+        mapped_event = KeyboardEvent(key_code=key, key_down=False)
+        self._receiver._send_to_socket.send(EventProtocol.KEYBOARD.value + pickle.dumps(mapped_event))
+        super().keyReleaseEvent(event)

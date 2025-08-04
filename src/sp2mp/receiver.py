@@ -8,6 +8,7 @@ class Receiver(QObject):
     _port: int
     _socket: socket.socket
     _receiver_thread: Thread
+    _send_to_socket: socket.socket
 
     data_received = pyqtSignal(bytes)
 
@@ -23,6 +24,7 @@ class Receiver(QObject):
 
     def _accept_connection(self) -> None:
         conn, addr = self._socket.accept()
+        self._send_to_socket = conn
         self.receive_data(conn)
 
     def receive_data(self, conn: socket.socket) -> None:
