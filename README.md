@@ -11,6 +11,10 @@ and the client will send back the key presses.
 Currently, this has only been tested over a LAN, using internal ip addresses, like `192.168.xxx.xxx`. **DO NOT** try to
 update the socket code to use external addresses, until key black/white listing is implemented.
 
+## NOTES
+
+- Only tested on Windows (this won't work on Linux or MacOS, due to the way the key events are handled).
+
 ## TODO
 
 - The key mapper functionality (allowing a client to bind their own player 1 keys to the server's player 2 keys for
