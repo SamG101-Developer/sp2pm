@@ -119,8 +119,6 @@ class Broadcaster:
     def _handle_keyboard_event(self, data: bytes) -> None:
         key_event = pickle.loads(data)
 
-        print(key_event)
-
         # Send key events to this machine.
         if key_event.key_down:
             win32api.PostMessage(self._hwnd, win32con.WM_KEYDOWN, key_event.key_code, 0)
