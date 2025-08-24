@@ -2,7 +2,7 @@ import time
 from dataclasses import dataclass, field
 from queue import Queue
 from socket import socket
-from threading import Thread
+from threading import Lock, Thread
 import pickle
 
 import win32api
@@ -39,10 +39,14 @@ class Broadcaster:
     _hwnd: int
     _clients: list[Client]
     _screenshot_thread: Thread
+    _lock: Lock
+    _fps: int
 
     def __init__(self, hwnd: int, hosts: list[str], ports: list[int]) -> None:
         self._hwnd = hwnd
         self._clients = [Client(host, port) for host, port in zip(hosts, ports)]
+        self._lock = Lock()
+        self._fps = 60
 
     def add_new_client(self, host: str, port: int, auto_broadcast: bool = False) -> None:
         client = Client(host, port)
@@ -64,13 +68,24 @@ class Broadcaster:
         thread.start()
         client.client_thread = thread
 
-    def broadcast(self, fps: int = 60) -> None:
-        self._screenshot_thread = Thread(target=self._screenshot_loop, args=(fps,))
+    def broadcast(self) -> None:
+        self._screenshot_thread = Thread(target=self._screenshot_loop, args=(self._fps,))
         self._screenshot_thread.daemon = True
         self._screenshot_thread.start()
 
         for client in self._clients:
             self._begin_client_thread(client)
+
+    def reset_hwnd(self, hwnd: int) -> None:
+        with self._lock:
+            self._hwnd = hwnd
+
+        # Reset the screenshot thread to use the new hwnd.
+        if self._screenshot_thread and self._screenshot_thread.is_alive():
+            self._screenshot_thread.join(timeout=1)
+            self._screenshot_thread = Thread(target=self._screenshot_loop, args=(self._fps,))
+            self._screenshot_thread.daemon = True
+            self._screenshot_thread.start()
 
     def _screenshot_loop(self, fps: int) -> None:
         while True:

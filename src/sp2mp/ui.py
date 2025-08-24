@@ -38,6 +38,7 @@ class UI(QDialog):
     _current_key_mapping: dict[int, int]
 
     _broadcaster: Optional[Broadcaster]
+    _is_broadcasting: bool
     _receiver: Optional[Receiver]
     _receiver_widget: ReceiverWidget
 
@@ -45,6 +46,7 @@ class UI(QDialog):
         super().__init__(parent, *args, **kwargs)
         self._app_scan_timer = QTimer(timeout=self._scan_apps, singleShot=False)
         self._current_key_mapping = {}
+        self._is_broadcasting = False
         self._setup_ui()
 
     def _setup_ui(self) -> None:
@@ -135,16 +137,22 @@ class UI(QDialog):
         self._app_scan_timer.start(1000)
 
     def _start_broadcasting(self) -> None:
-        self.sender().setDisabled(True)
-        self._broadcaster = Broadcaster(self._current_app_selection_data[0], [], [])
+        # Setup if not broadcasting yet.
+        if not self._is_broadcasting:
+            self._broadcaster = Broadcaster(self._current_app_selection_data[0], [], [])
 
-        for client in self._client_addresses.layout().findChildren(QHBoxLayout):
-            address = client.itemAt(0).widget().text()
-            port = int(client.itemAt(1).widget().text())
-            if not address or not port: continue
+            for client in self._client_addresses.layout().findChildren(QHBoxLayout):
+                address = client.itemAt(0).widget().text()
+                port = int(client.itemAt(1).widget().text())
+                if not address or not port: continue
 
-            self._broadcaster.add_new_client(address, port)
+                self._broadcaster.add_new_client(address, port)
 
+        else:
+            # Otherwise, just rest the hwnd to screenshot.
+            self._broadcaster.reset_hwnd(self._current_app_selection_data[0])
+
+        self._is_broadcasting = True
         self._broadcaster.broadcast()
 
     def _start_receiving(self) -> None:
